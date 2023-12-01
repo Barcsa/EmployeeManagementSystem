@@ -1,0 +1,6 @@
+backend/.env
+backend/bin
+backend/obj
+frontend/.env
+frontend/dist
+ems-frontend/node_modules
