@@ -10,7 +10,7 @@ COPY ems-backend/pom.xml ems-backend/
 COPY ems-backend/src ems-backend/src/
 
 # Build the backend application
-RUN chmod +x ems-backend/mvnw
+RUN chmod +x ems-backend/mvn
 RUN cd ems-backend && ./mvnw clean package -DskipTests
 
 # Stage 2: Build the React Frontend
