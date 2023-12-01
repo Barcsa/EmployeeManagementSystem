@@ -15,6 +15,6 @@ FROM openjdk:17-jdk-slim
 RUN mkdir /app
 WORKDIR /app
 COPY --from=backend-builder /backend/target/*.jar app.jar
-COPY --from=frontend-builder /frontend/build /frontend
+COPY --from=frontend-builder /frontend/build /frontend/build
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
