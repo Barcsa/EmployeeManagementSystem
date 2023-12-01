@@ -1,17 +1,29 @@
-# Stage 1: Build the Java Spring Boot Backend
-FROM maven:3.8-jdk-11 as backend-builder
+# Multi-stage Dockerfile for Java Spring Boot Backend and React Frontend
+
+# Stage 1: Generate Maven Wrapper Script
+FROM maven:3.8.4-openjdk-11-slim as maven-wrapper
+
+WORKDIR /app
+
+# Copy only the necessary files for generating the Maven wrapper
+COPY ems-backend/pom.xml ems-backend/
+COPY ems-backend/src ems-backend/src/
+
+# Generate Maven wrapper script
+RUN cd ems-backend && mvn -N io.takari:maven:wrapper
+
+# Stage 2: Build the Java Spring Boot Backend
+FROM openjdk:11-jre-slim as backend-builder
 
 WORKDIR /app
 
 # Copy only the necessary files for building the backend
-COPY ems-backend/pom.xml ems-backend/
-COPY ems-backend/src ems-backend/src/
+COPY --from=maven-wrapper /app/ems-backend /app/ems-backend
 
 # Build the backend application
-RUN chmod +x ems-backend/mvnw
 RUN cd ems-backend && ./mvnw clean package -DskipTests
 
-# Stage 2: Build the React Frontend
+# Stage 3: Build the React Frontend
 FROM node:14-alpine as frontend-builder
 
 WORKDIR /app
@@ -24,7 +36,7 @@ COPY ems-frontend/src ems-frontend/src/
 # Install dependencies and build the frontend application
 RUN cd ems-frontend && npm install && npm run build
 
-# Stage 3: Create the final image
+# Stage 4: Create the final image
 FROM openjdk:11-jre-slim
 
 WORKDIR /app
