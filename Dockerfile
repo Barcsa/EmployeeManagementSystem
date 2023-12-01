@@ -1,7 +1,5 @@
-# Multi-stage Dockerfile for Java Spring Boot Backend and React Frontend
-
 # Stage 1: Build the Java Spring Boot Backend
-FROM openjdk:11-jre-slim as backend-builder
+FROM maven:3.8-jdk-11 as backend-builder
 
 WORKDIR /app
 
@@ -10,7 +8,7 @@ COPY ems-backend/pom.xml ems-backend/
 COPY ems-backend/src ems-backend/src/
 
 # Build the backend application
-RUN chmod +x ems-backend/mvn
+RUN chmod +x ems-backend/mvnw
 RUN cd ems-backend && ./mvnw clean package -DskipTests
 
 # Stage 2: Build the React Frontend
