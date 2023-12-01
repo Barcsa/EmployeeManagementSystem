@@ -1,51 +1,53 @@
-# Multi-stage Dockerfile for Java Spring Boot Backend and React Frontend
+# Use an official Maven image as a build stage
+FROM maven:3.8.4-openjdk-11-slim AS backend-builder
 
-# Stage 1: Generate Maven Wrapper Script
-FROM maven:3.8.4-openjdk-11-slim as maven-wrapper
-
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy only the necessary files for generating the Maven wrapper
-COPY ems-backend/pom.xml ems-backend/
-COPY ems-backend/src ems-backend/src/
+# Copy only the POM file to resolve dependencies
+COPY ems-backend/pom.xml .
 
-# Generate Maven wrapper script
-RUN cd ems-backend && mvn -N io.takari:maven:wrapper
+# Download dependencies and build the project
+RUN mvn dependency:go-offline
 
-# Stage 2: Build the Java Spring Boot Backend
-FROM openjdk:11-jre-slim as backend-builder
+# Copy the rest of the backend code
+COPY ems-backend .
 
+# Build the Spring Boot application
+RUN mvn clean install
+
+# Use an official Node.js image as another build stage
+FROM node:14-alpine AS frontend-builder
+
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy only the necessary files for building the backend
-COPY --from=maven-wrapper /app/ems-backend /app/ems-backend
+# Copy package.json and package-lock.json to install dependencies
+COPY ems-frontend/package*.json ./
 
-# Build the backend application
-RUN cd ems-backend && ./mvnw clean package -DskipTests
+# Install frontend dependencies
+RUN npm install
 
-# Stage 3: Build the React Frontend
-FROM node:14-alpine as frontend-builder
+# Copy the rest of the frontend code
+COPY ems-frontend .
 
-WORKDIR /app
+# Build the React app
+RUN npm run build
 
-# Copy only the necessary files for building the frontend
-COPY ems-frontend/package.json ems-frontend/package-lock.json ems-frontend/
-COPY ems-frontend/public ems-frontend/public/
-COPY ems-frontend/src ems-frontend/src/
-
-# Install dependencies and build the frontend application
-RUN cd ems-frontend && npm install && npm run build
-
-# Stage 4: Create the final image
+# Use a lightweight runtime image for the final stage
 FROM openjdk:11-jre-slim
 
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the backend JAR file from the backend-builder stage
-COPY --from=backend-builder /app/ems-backend/target/your-backend.jar /app/ems-backend.jar
+# Copy the compiled JAR file from the backend-builder stage
+COPY --from=backend-builder /app/target/ems-backend.jar .
 
-# Expose port 8080 for the backend
+# Copy the build artifacts from the frontend-builder stage
+COPY --from=frontend-builder /app/build ./ems-frontend/build
+
+# Expose the port that your Spring Boot application will run on
 EXPOSE 8080
 
-# Start the backend when the container launches
+# Command to run your Spring Boot application
 CMD ["java", "-jar", "ems-backend.jar"]
