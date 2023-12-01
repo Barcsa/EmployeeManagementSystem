@@ -33,14 +33,8 @@ WORKDIR /app
 # Copy the backend JAR file from the backend-builder stage
 COPY --from=backend-builder /app/ems-backend/target/your-backend.jar /app/ems-backend.jar
 
-# Copy the static files from the frontend-builder stage to the Nginx web root directory
-COPY --from=frontend-builder /app/ems-frontend/build /usr/share/nginx/html
-
 # Expose port 8080 for the backend
 EXPOSE 8080
-
-# Expose port 80 for the frontend (assuming it will be served through a reverse proxy or Nginx)
-EXPOSE 80
 
 # Start the backend when the container launches
 CMD ["java", "-jar", "ems-backend.jar"]
