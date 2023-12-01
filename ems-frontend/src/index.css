@@ -1,0 +1,19 @@
+#root {
+  max-width: 1920px;
+  text-align: center;
+  background: url('./images/abs6.jpg');
+  min-height: 100vh; /* Ensure at least full viewport height */
+}
+
+.container {
+  color: aqua;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  background-color: black;
+  text-align: center;
+  color: purple;
+}
