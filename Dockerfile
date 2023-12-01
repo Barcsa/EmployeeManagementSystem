@@ -11,7 +11,8 @@ COPY ems-backend/pom.xml .
 RUN mvn dependency:go-offline
 
 # Copy the rest of the backend code
-COPY ems-backend .
+COPY ems-backend/src src
+COPY ems-backend/target target
 
 # Build the Spring Boot application
 RUN mvn clean install
