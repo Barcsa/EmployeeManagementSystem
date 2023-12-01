@@ -1,54 +1,46 @@
-# Use an official Maven image as a build stage
-FROM maven:3.8.4-openjdk-11-slim AS backend-builder
-
-# Set the working directory inside the container
+# Stage 1: Build the Java Spring Boot Application
+FROM maven:3.8.4-openjdk-17-slim AS build
 WORKDIR /app
 
-# Copy only the POM file to resolve dependencies
-COPY ems-backend/pom.xml .
+# Copy only necessary files for Maven dependencies
+COPY backend/pom.xml .
+COPY backend/.mvn .mvn
 
-# Download dependencies and build the project
+# Download dependencies only (skip building the actual application)
 RUN mvn dependency:go-offline
 
-# Copy the rest of the backend code
-COPY ems-backend/src src
-COPY ems-backend/target target
+# Copy the entire backend source code
+COPY backend/src src
 
-# Build the Spring Boot application
-RUN mvn clean install
+# Build the application
+RUN mvn package -DskipTests
 
-# Use an official Node.js image as another build stage
-FROM node:14-alpine AS frontend-builder
-
-# Set the working directory inside the container
+# Stage 2: Build the React Frontend
+FROM node:16 AS frontend
 WORKDIR /app
 
-# Copy package.json and package-lock.json to install dependencies
-COPY ems-frontend/package*.json ./
+# Copy only necessary files for npm dependencies
+COPY frontend/package.json frontend/package-lock.json ./
 
-# Install frontend dependencies
-RUN npm install
+# Install npm dependencies
+RUN npm ci
 
-# Copy the rest of the frontend code
-COPY ems-frontend .
+# Copy the entire frontend source code
+COPY frontend/src src
+COPY frontend/public public
 
-# Build the React app
+# Build the React application
 RUN npm run build
 
-# Use a lightweight runtime image for the final stage
-FROM openjdk:11-jre-slim
-
-# Set the working directory inside the container
+# Stage 3: Create the final image
+FROM openjdk:17-jdk-slim
 WORKDIR /app
 
-# Copy the compiled JAR file from the backend-builder stage
-COPY --from=backend-builder /app/target/ems-backend.jar .
+# Copy the built JAR file from the first stage
+COPY --from=build /app/target/*.jar app.jar
 
-# Copy the build artifacts from the frontend-builder stage
-COPY --from=frontend-builder /app/build ./ems-frontend/build
-
-# Expose the port that your Spring Boot application will run on
+# Expose the port that the application will run on
 EXPOSE 8080
 
-# Command to run your Spring Boot application
-CMD ["java", "-jar", "ems-backend.jar"]
+# Command to run the application
+CMD ["java", "-jar", "app.jar"]
