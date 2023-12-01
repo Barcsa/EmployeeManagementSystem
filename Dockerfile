@@ -20,7 +20,7 @@ FROM node:16 AS build-frontend
 WORKDIR /app
 
 # Copy only necessary files for npm dependencies
-COPY ems-frontend/package.json ems-frontend/package-lock.json ./
+COPY ems-frontend .
 
 # Install npm dependencies
 RUN npm ci
