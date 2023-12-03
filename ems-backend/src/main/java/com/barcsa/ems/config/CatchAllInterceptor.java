@@ -15,8 +15,11 @@ import java.nio.file.Paths;
 @Component
 public class CatchAllInterceptor implements HandlerInterceptor {
 
-    @Autowired
-    private Environment environment;
+    private final Environment environment;
+
+    public CatchAllInterceptor(Environment environment) {
+        this.environment = environment;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
@@ -25,7 +28,9 @@ public class CatchAllInterceptor implements HandlerInterceptor {
         } else {
             // Handle non-API requests (fallback mechanism)
 
-            String indexPath = Paths.get(environment.getProperty("spring.resources.static-locations[0]"), "index.html").toString();
+            // Specify your custom path to the folder containing index.html
+            String customPath = "ems-frontend";
+            String indexPath = Paths.get(customPath, "index.html").toString();
 
             String content = new String(Files.readAllBytes(Paths.get(indexPath)));
 
