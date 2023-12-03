@@ -23,10 +23,10 @@ public class CatchAllInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException {
-        if (request.getRequestURI().startsWith("/api")) {
-            return true; // Continue with the normal processing for API requests
-        } else {
-            // Handle non-API requests (fallback mechanism)
+        // Check if the request URI contains the specified value
+        String fallbackUri = "https://employee-management-system-nl8a.onrender.com/";
+        if (request.getRequestURI().contains(fallbackUri)) {
+            // The specified URI is present, serve the fallback content
 
             // Specify your custom path to the folder containing index.html
             String customPath = "ems-frontend";
@@ -37,7 +37,10 @@ public class CatchAllInterceptor implements HandlerInterceptor {
             response.setContentType("text/html");
             response.getWriter().write(content);
 
-            return false; // Stop further processing for non-API requests
+            return false; // Stop further processing for requests with the specified URI
+        } else {
+            // Continue with normal processing for other requests
+            return true;
         }
     }
 }
